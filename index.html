@@ -68,22 +68,141 @@
         </div>
       </div>
 
-      <!-- More fields... (I can continue building this with you step by step) -->
+      <!-- Lease Term + Free Rent -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6">
+        <div>
+          <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Lease Term (Years)</label>
+          <input type="number" id="years" value="5" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+        </div>
+        <div class="flex items-center gap-x-3 pt-8">
+          <input type="checkbox" id="include-free-rent" onchange="toggleFreeRent()" class="w-5 h-5 accent-blue-600">
+          <label for="include-free-rent" class="text-slate-700 font-medium">Include Free Rent</label>
+        </div>
+      </div>
+
+      <!-- Free Rent Fields -->
+      <div id="free-rent-section" class="hidden mt-6 grid grid-cols-2 gap-6">
+        <div>
+          <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Free Rent Months</label>
+          <input type="number" id="free-months" value="2" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Extra Months</label>
+          <input type="number" id="extra-months" value="0" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+        </div>
+      </div>
+
+      <!-- Rent Structure -->
+      <div class="mt-8 pt-6 border-t border-slate-200">
+        <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Rent Structure</label>
+        <select id="rent-structure" onchange="updateRentStructureInputs()" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+          <option value="annual">Annual Escalations</option>
+          <option value="flat">Flat Rent</option>
+          <option value="every-n">Escalations Every N Years</option>
+          <option value="flat-step">Flat Period + Step-Ups</option>
+        </select>
+
+        <div id="structure-inputs" class="mt-5 min-h-[140px]">
+          <!-- Dynamic inputs will be injected here by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Commission Details -->
+      <div class="mt-8 pt-6 border-t border-slate-200">
+        <h3 class="text-lg font-semibold mb-4">Commission Details</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Commission Structure</label>
+            <select id="commission-structure" onchange="updateCommissionInputs()" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+              <option value="flat">Flat %</option>
+              <option value="tiered">Tiered %</option>
+            </select>
+          </div>
+
+          <!-- Flat Rate Input -->
+          <div id="flat-commission-container" class="min-h-[140px] flex items-start pt-1">
+            <div>
+              <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Commission Rate</label>
+              <div class="flex items-center gap-x-3">
+                <input type="number" id="flat-rate" value="6" class="w-28 bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-2xl font-medium text-center focus:outline-none focus:border-blue-500">
+                <span class="text-2xl text-slate-400">%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tiered Commission Section -->
+        <div id="tiered-commission-container" class="hidden mt-6">
+          <!-- Tiered inputs will be added here -->
+        </div>
+      </div>
+
+      <!-- Broker Splits -->
+      <div class="mt-8 pt-8 border-t border-slate-200">
+        <label class="block text-xs uppercase tracking-widest text-slate-500 mb-4">Broker Splits</label>
+        <div class="grid grid-cols-2 gap-8">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-700">Your side</span>
+            <input type="number" id="your-side" value="50" class="w-20 text-center bg-slate-50 border border-slate-300 rounded-2xl px-4 py-2">%
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-700">Personal split</span>
+            <input type="number" id="agent-split" value="50" class="w-20 text-center bg-slate-50 border border-slate-300 rounded-2xl px-4 py-2">%
+          </div>
+        </div>
+      </div>
+
+      <button onclick="calculate()" class="mt-10 w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-2xl font-semibold flex items-center justify-center gap-x-2 text-lg">
+        <i class="fa-solid fa-calculator"></i>
+        CALCULATE NOW
+      </button>
     </div>
 
-    <!-- Results & Saved Deals sections will go here -->
+    <!-- Results Section -->
+    <div id="results-panel" class="hidden bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+      <!-- Results will be injected here by JavaScript -->
+    </div>
 
+    <!-- Saved Deals -->
+    <div id="saved-deals-section" class="hidden mt-8">
+      <h2 class="text-lg font-semibold mb-4">Saved Deals</h2>
+      <div id="saved-deals-list" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Saved deals will be injected here -->
+      </div>
+    </div>
   </div>
 
   <script>
-    // All your JavaScript functions will go here
+    // JavaScript will be added in the next step
+    console.log('%c[LeaseCalc] Clean starting point loaded', 'color:#3b82f6');
+
     function updateRentLabel() {
       const type = document.getElementById('rent-quoted-as').value;
       document.getElementById('rent-label').innerText = (type === 'sf') ? '$/SF/Year' : 'Annual Quoted Rent';
     }
 
-    // We will build the full working version together from here
-    console.log('%c[LeaseCalc] Clean starting point loaded successfully', 'color:#3b82f6');
+    function toggleFreeRent() {
+      const section = document.getElementById('free-rent-section');
+      section.classList.toggle('hidden', !document.getElementById('include-free-rent').checked);
+    }
+
+    function updateRentStructureInputs() {
+      // Will be implemented next
+      console.log('Rent structure changed');
+    }
+
+    function updateCommissionInputs() {
+      // Will be implemented next
+      console.log('Commission type changed');
+    }
+
+    function calculate() {
+      alert('Calculation logic will be added in the next step!');
+    }
+
+    function saveDeal() {
+      alert('Save deal logic will be added in the next step!');
+    }
   </script>
 </body>
 </html>
