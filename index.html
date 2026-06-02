@@ -406,4 +406,63 @@
         const rate = parseFloat(document.getElementById('flat-rate').value) / 100 || 0.06;
         yearCommissions = annualRents.map(r => r * rate);
       } else {
-        yearCommissions = annualRents.map((rent, idx)
+        yearCommissions = annualRents.map((rent, idx) => {
+          const yearNum = idx + 1;
+          let rate = 0;
+          for (let t of tiers) {
+            if (yearNum >= t.from && (t.to === 0 || yearNum <= t.to)) {
+              rate = t.rate / 100;
+              break;
+            }
+          }
+          return rent * (rate || 0);
+        });
+      }
+      totalCommission = yearCommissions.reduce((a, b) => a + b, 0);
+
+      const yourGross = totalCommission * yourSide;
+      const yourNet = yourGross * agentSplit;
+
+      // Display results
+      document.getElementById('results-panel').classList.remove('hidden');
+      document.getElementById('total-lease-value').innerText = formatCurrency(totalLease);
+      document.getElementById('total-commission').innerText = formatCurrency(totalCommission);
+      document.getElementById('your-gross').innerText = formatCurrency(yourGross);
+      document.getElementById('your-net').innerText = formatCurrency(yourNet);
+
+      // Year-by-year table
+      const tbody = document.getElementById('year-table-body');
+      tbody.innerHTML = '';
+
+      annualRents.forEach((rent, i) => {
+        const row = document.createElement('tr');
+        const psf = sqft > 0 ? rent / sqft : 0;
+        row.innerHTML = `
+          <td class="py-4 px-6">${i + 1}</td>
+          <td class="py-4 px-6 text-right">${formatCurrency(rent)}</td>
+          <td class="py-4 px-6 text-right">${psf.toFixed(2)}</td>
+          <td class="py-4 px-6 text-right text-blue-600">${formatCurrency(yearCommissions[i] || 0)}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function formatCurrency(num) {
+      return '$' + num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function saveDeal() {
+      alert('Save deal feature coming in the next step!');
+    }
+
+    // Initialize
+    function init() {
+      renderRentStructureInputs();
+      renderCommissionInputs();
+      console.log('%c[LeaseCalc v3] Calculation engine loaded successfully', 'color:#3b82f6');
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
