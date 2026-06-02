@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeaseCalc • Commercial Lease Commission Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    body { font-family: 'Inter', system_ui, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900">
+  <div class="max-w-7xl mx-auto p-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center gap-x-3">
+        <div class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl">LC</div>
+        <div>
+          <h1 class="text-3xl font-semibold tracking-tight">LeaseCalc</h1>
+          <p class="text-blue-600 text-sm">Commercial Lease Commission Calculator</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-x-4">
+        <button onclick="saveDeal()" class="flex items-center gap-x-2 px-5 py-2.5 bg-white border border-slate-300 rounded-2xl text-sm font-medium hover:bg-slate-50">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>Save Deal</span>
+        </button>
+        <button onclick="window.print()" class="flex items-center gap-x-2 px-5 py-2.5 bg-blue-600 text-white rounded-2xl text-sm font-medium hover:bg-blue-700">
+          <i class="fa-solid fa-file-export"></i>
+          <span>Export PDF</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Deal Details -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-8">
+      <h2 class="text-2xl font-semibold mb-6 flex items-center gap-x-2">
+        <i class="fa-solid fa-building text-blue-600"></i>
+        Deal Details
+      </h2>
+
+      <!-- Top Row -->
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+        <div class="min-h-[100px]">
+          <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Square Footage</label>
+          <div class="flex gap-x-3 items-center">
+            <input type="number" id="sqft" value="0" class="flex-1 bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+            <span class="text-slate-400 text-lg">sq ft</span>
+          </div>
+        </div>
+
+        <div class="min-h-[100px]">
+          <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Rent Quoted As</label>
+          <select id="rent-quoted-as" onchange="updateRentLabel()" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500 h-[60px]">
+            <option value="sf">$/SF/Year</option>
+            <option value="annual">Annual Quoted Rent</option>
+          </select>
+        </div>
+
+        <div class="min-h-[100px]">
+          <label id="rent-label" class="block text-xs uppercase tracking-widest text-slate-500 mb-2">$/SF/Year</label>
+          <div class="flex gap-x-3 items-center">
+            <span class="text-3xl text-slate-400">$</span>
+            <input type="number" id="rent-amount" value="0" class="flex-1 bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-2xl font-medium focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+      </div>
+
+      <!-- More fields... (I can continue building this with you step by step) -->
+    </div>
+
+    <!-- Results & Saved Deals sections will go here -->
+
+  </div>
+
+  <script>
+    // All your JavaScript functions will go here
+    function updateRentLabel() {
+      const type = document.getElementById('rent-quoted-as').value;
+      document.getElementById('rent-label').innerText = (type === 'sf') ? '$/SF/Year' : 'Annual Quoted Rent';
+    }
+
+    // We will build the full working version together from here
+    console.log('%c[LeaseCalc] Clean starting point loaded successfully', 'color:#3b82f6');
+  </script>
+</body>
+</html>
