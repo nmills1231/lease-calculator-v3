@@ -95,7 +95,7 @@
       <!-- Rent Structure -->
       <div class="mt-8 pt-6 border-t border-slate-200">
         <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Rent Structure</label>
-        <select id="rent-structure" onchange="updateRentStructureInputs()" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+        <select id="rent-structure" onchange="renderRentStructureInputs()" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
           <option value="annual">Annual Escalations</option>
           <option value="flat">Flat Rent</option>
           <option value="every-n">Escalations Every N Years</option>
@@ -103,7 +103,7 @@
         </select>
 
         <div id="structure-inputs" class="mt-5 min-h-[140px]">
-          <!-- Dynamic inputs will be injected here by JavaScript -->
+          <!-- Dynamic content injected by JS -->
         </div>
       </div>
 
@@ -113,14 +113,14 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Commission Structure</label>
-            <select id="commission-structure" onchange="updateCommissionInputs()" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+            <select id="commission-structure" onchange="renderCommissionInputs()" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
               <option value="flat">Flat %</option>
               <option value="tiered">Tiered %</option>
             </select>
           </div>
 
-          <!-- Flat Rate Input -->
-          <div id="flat-commission-container" class="min-h-[140px] flex items-start pt-1">
+          <!-- Flat Rate -->
+          <div id="flat-rate-container" class="min-h-[140px] flex items-start pt-1">
             <div>
               <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Commission Rate</label>
               <div class="flex items-center gap-x-3">
@@ -131,9 +131,17 @@
           </div>
         </div>
 
-        <!-- Tiered Commission Section -->
-        <div id="tiered-commission-container" class="hidden mt-6">
-          <!-- Tiered inputs will be added here -->
+        <!-- Tiered Commission -->
+        <div id="tiered-container" class="hidden mt-6">
+          <div class="flex justify-between items-center mb-3">
+            <label class="text-sm font-medium">Tiers</label>
+            <button onclick="addTier()" class="flex items-center gap-x-1 text-blue-600 hover:text-blue-700 text-sm font-medium">
+              <i class="fa-solid fa-plus"></i> Add Tier
+            </button>
+          </div>
+          <div id="tiers-list" class="space-y-4">
+            <!-- Tier rows injected by JS -->
+          </div>
         </div>
       </div>
 
@@ -158,23 +166,22 @@
       </button>
     </div>
 
-    <!-- Results Section -->
-    <div id="results-panel" class="hidden bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
-      <!-- Results will be injected here by JavaScript -->
+    <!-- Results -->
+    <div id="results-panel" class="hidden bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-8">
+      <!-- Populated by JavaScript -->
     </div>
 
     <!-- Saved Deals -->
-    <div id="saved-deals-section" class="hidden mt-8">
+    <div id="saved-deals-section" class="hidden">
       <h2 class="text-lg font-semibold mb-4">Saved Deals</h2>
       <div id="saved-deals-list" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Saved deals will be injected here -->
+        <!-- Populated by JavaScript -->
       </div>
     </div>
   </div>
 
   <script>
-    // JavaScript will be added in the next step
-    console.log('%c[LeaseCalc] Clean starting point loaded', 'color:#3b82f6');
+    // ==================== JAVASCRIPT ====================
 
     function updateRentLabel() {
       const type = document.getElementById('rent-quoted-as').value;
@@ -186,14 +193,121 @@
       section.classList.toggle('hidden', !document.getElementById('include-free-rent').checked);
     }
 
-    function updateRentStructureInputs() {
-      // Will be implemented next
-      console.log('Rent structure changed');
+    function renderRentStructureInputs() {
+      const container = document.getElementById('structure-inputs');
+      const type = document.getElementById('rent-structure').value;
+      container.innerHTML = '';
+
+      if (type === 'annual') {
+        container.innerHTML = `
+          <div>
+            <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Annual Escalation %</label>
+            <div class="flex">
+              <input type="number" id="annual-escalation" value="3" class="flex-1 bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+              <span class="bg-slate-100 border border-l-0 border-slate-300 rounded-r-2xl px-6 flex items-center text-slate-400">%</span>
+            </div>
+          </div>
+        `;
+      } else if (type === 'every-n') {
+        container.innerHTML = `
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Escalation %</label>
+              <div class="flex">
+                <input type="number" id="annual-escalation" value="3" class="flex-1 bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+                <span class="bg-slate-100 border border-l-0 border-slate-300 rounded-r-2xl px-6 flex items-center text-slate-400">%</span>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Every N Years</label>
+              <input type="number" id="escalation-frequency" value="3" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+            </div>
+          </div>
+        `;
+      } else if (type === 'flat-step') {
+        container.innerHTML = `
+          <div class="grid grid-cols-3 gap-6">
+            <div>
+              <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Flat for first</label>
+              <input type="number" id="flat-years" value="3" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+              <span class="text-xs text-slate-400 mt-1 block">years</span>
+            </div>
+            <div>
+              <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Then escalation %</label>
+              <div class="flex">
+                <input type="number" id="annual-escalation" value="3" class="flex-1 bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+                <span class="bg-slate-100 border border-l-0 border-slate-300 rounded-r-2xl px-6 flex items-center text-slate-400">%</span>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Step every</label>
+              <input type="number" id="step-frequency" value="3" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500">
+              <span class="text-xs text-slate-400 mt-1 block">years</span>
+            </div>
+          </div>
+        `;
+      }
     }
 
-    function updateCommissionInputs() {
-      // Will be implemented next
-      console.log('Commission type changed');
+    function renderCommissionInputs() {
+      const tieredContainer = document.getElementById('tiered-container');
+      const flatContainer = document.getElementById('flat-rate-container');
+
+      if (document.getElementById('commission-structure').value === 'tiered') {
+        flatContainer.classList.add('hidden');
+        tieredContainer.classList.remove('hidden');
+        if (tiers.length === 0) tiers = [{ from: 1, to: 5, rate: 6 }];
+        renderTiers();
+      } else {
+        flatContainer.classList.remove('hidden');
+        tieredContainer.classList.add('hidden');
+      }
+    }
+
+    let tiers = [{ from: 1, to: 5, rate: 6 }];
+
+    function renderTiers() {
+      const container = document.getElementById('tiers-list');
+      container.innerHTML = '';
+
+      tiers.forEach((tier, index) => {
+        const div = document.createElement('div');
+        div.className = `flex gap-4 items-end bg-slate-50 p-4 rounded-2xl`;
+        div.innerHTML = `
+          <div class="flex-1">
+            <label class="block text-xs text-slate-500 mb-1">From Year</label>
+            <input type="number" value="${tier.from}" class="w-full bg-white border border-slate-300 rounded-2xl px-4 py-3" onchange="updateTier(${index}, 'from', this.value)">
+          </div>
+          <div class="flex-1">
+            <label class="block text-xs text-slate-500 mb-1">To Year</label>
+            <input type="number" value="${tier.to}" class="w-full bg-white border border-slate-300 rounded-2xl px-4 py-3" onchange="updateTier(${index}, 'to', this.value)">
+          </div>
+          <div class="w-28">
+            <label class="block text-xs text-slate-500 mb-1">Rate %</label>
+            <input type="number" value="${tier.rate}" class="w-full bg-white border border-slate-300 rounded-2xl px-4 py-3" onchange="updateTier(${index}, 'rate', this.value)">
+          </div>
+          <button onclick="removeTier(${index})" class="text-red-500 hover:text-red-600 mb-1">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function updateTier(index, field, value) {
+      tiers[index][field] = Number(value);
+    }
+
+    function addTier() {
+      const last = tiers[tiers.length - 1];
+      tiers.push({ from: last.to + 1 || 1, to: 0, rate: 6 });
+      renderTiers();
+    }
+
+    function removeTier(index) {
+      if (tiers.length === 1) return;
+      tiers.splice(index, 1);
+      renderTiers();
     }
 
     function calculate() {
@@ -203,6 +317,15 @@
     function saveDeal() {
       alert('Save deal logic will be added in the next step!');
     }
+
+    // Initialize
+    function init() {
+      renderRentStructureInputs();
+      renderCommissionInputs();
+      console.log('%c[LeaseCalc v3] Initialized successfully', 'color:#3b82f6');
+    }
+
+    window.onload = init;
   </script>
 </body>
 </html>
