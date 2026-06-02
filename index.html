@@ -209,11 +209,10 @@
   </div>
 
   <script>
-    // ==================== GLOBAL VARIABLES ====================
+    // ==================== VARIABLES ====================
     let tiers = [{ from: 1, to: 5, rate: 6 }];
     let savedDeals = [];
 
-    // ==================== HELPER ====================
     function formatCurrency(num) {
       return '$' + num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
@@ -372,6 +371,223 @@
           else if (rentType === 'flat-step') {
             const flatY = parseFloat(document.getElementById('flat-years')?.value) || 3;
             const esc = parseFloat(document.getElementById('annual-escalation')?.value) || 3;
-            const step = parseFloat(document.getElement
+            const step = parseFloat(document.getElementById('step-frequency')?.value) || 3;
+            if (y > flatY) {
+              rentThisYear *= Math.pow(1 + esc / 100, Math.floor((y - flatY - 1) / step) + 1);
+            }
+          }
+
+          if (y === 1 && remainingFree > 0) {
+            const freeThisYear = Math.min(remainingFree, 12) * (rentThisYear / 12);
+            rentThisYear = Math.max(0, rentThisYear - freeThisYear);
+            remainingFree -= Math.min(remainingFree, 12);
+          }
+
+          annualRents.push(rentThisYear);
+          totalLease += rentThisYear;
+        }
+
+        let yearCommissions = [];
+        const commissionType = document.getElementById('commission-structure').value;
+
+        if (commissionType === 'flat') {
+          const rate = parseFloat(document.getElementById('flat-rate').value) / 100 || 0.06;
+          yearCommissions = annualRents.map(r => r * rate);
+        } else {
+          yearCommissions = annualRents.map((rent, idx) => {
+            const yearNum = idx + 1;
+            let rate = 0;
+            for (let t of tiers) {
+              if (yearNum >= t.from && (t.to === 0 || yearNum <= t.to)) {
+                rate = t.rate / 100;
+                break;
+              }
+            }
+            return rent * (rate || 0);
+          });
+        }
+
+        const totalCommission = yearCommissions.reduce((a, b) => a + b, 0);
+        const yourGross = totalCommission * yourSide;
+        const yourNet = yourGross * agentSplit;
+
+        // Show results
+        document.getElementById('results-panel').classList.remove('hidden');
+        document.getElementById('total-lease-value').innerText = formatCurrency(totalLease);
+        document.getElementById('total-commission').innerText = formatCurrency(totalCommission);
+        document.getElementById('your-gross').innerText = formatCurrency(yourGross);
+        document.getElementById('your-net').innerText = formatCurrency(yourNet);
+
+        // Year table
+        const tbody = document.getElementById('year-table-body');
+        tbody.innerHTML = '';
+
+        annualRents.forEach((rent, i) => {
+          const psf = sqft > 0 ? rent / sqft : 0;
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="py-4 px-6">${i + 1}</td>
+            <td class="py-4 px-6 text-right">${formatCurrency(rent)}</td>
+            <td class="py-4 px-6 text-right">${psf.toFixed(2)}</td>
+            <td class="py-4 px-6 text-right text-blue-600">${formatCurrency(yearCommissions[i] || 0)}</td>
+          `;
+          tbody.appendChild(row);
+        });
+
+      } catch (error) {
+        console.error("Calculation error:", error);
+        alert("There was an error. Please open Console (F12) and tell me the red message.");
+      }
+    }
+
+    // ==================== SAVED DEALS ====================
+    function loadSavedDeals() {
+      const saved = localStorage.getItem('leaseDeals');
+      if (saved) {
+        savedDeals = JSON.parse(saved);
+        renderSavedDeals();
+      }
+    }
+
+    function renderSavedDeals() {
+      const container = document.getElementById('saved-deals-list');
+      const section = document.getElementById('saved-deals-section');
+      container.innerHTML = '';
+
+      if (savedDeals.length === 0) {
+        section.classList.add('hidden');
+        return;
+      }
+      section.classList.remove('hidden');
+
+      savedDeals.forEach((deal, index) => {
+        const card = document.createElement('div');
+        card.className = `bg-white border border-slate-200 rounded-3xl p-5 hover:border-blue-300 transition-colors relative group`;
+
+        card.innerHTML = `
+          <div class="flex justify-between items-start cursor-pointer" onclick="loadDeal(${index})">
+            <div>
+              <p class="font-semibold">${deal.name}</p>
+              <p class="text-xs text-slate-500">${deal.date}</p>
+            </div>
+            <div class="text-right pr-14">
+              <p class="text-blue-600 text-xl font-medium">${formatCurrency(deal.yourNet)}</p>
+              <p class="text-xs text-slate-500">your net</p>
+            </div>
+          </div>
+
+          <div class="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+            <button onclick="event.stopImmediatePropagation(); editDeal(${index});" 
+                    class="p-1.5 rounded-lg bg-white border border-slate-200 text-blue-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 shadow-sm">
+              <i class="fa-solid fa-edit"></i>
+            </button>
+            <button onclick="event.stopImmediatePropagation(); deleteDeal(${index});" 
+                    class="p-1.5 rounded-lg bg-white border border-slate-200 text-red-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200 shadow-sm">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function saveDeal() {
+      if (document.getElementById('results-panel').classList.contains('hidden')) {
+        alert("Please calculate first before saving.");
+        return;
+      }
+
+      const name = prompt("Deal name?", "New Deal");
+      if (!name) return;
+
+      const deal = {
+        id: Date.now(),
+        name: name.trim(),
+        date: new Date().toLocaleDateString(),
+        sqft: parseFloat(document.getElementById('sqft').value) || 0,
+        rentQuotedAs: document.getElementById('rent-quoted-as').value,
+        rentAmount: parseFloat(document.getElementById('rent-amount').value) || 0,
+        years: parseInt(document.getElementById('years').value) || 5,
+        includeFreeRent: document.getElementById('include-free-rent').checked,
+        freeMonths: parseFloat(document.getElementById('free-months').value) || 0,
+        extraMonths: parseFloat(document.getElementById('extra-months').value) || 0,
+        rentStructure: document.getElementById('rent-structure').value,
+        commissionType: document.getElementById('commission-structure').value,
+        flatRate: parseFloat(document.getElementById('flat-rate').value) || 6,
+        tiers: JSON.parse(JSON.stringify(tiers)),
+        yourSide: parseFloat(document.getElementById('your-side').value) || 50,
+        agentSplit: parseFloat(document.getElementById('agent-split').value) || 50,
+        totalLease: parseFloat(document.getElementById('total-lease-value').innerText.replace(/[^0-9.-]+/g,"")) || 0,
+        totalCommission: parseFloat(document.getElementById('total-commission').innerText.replace(/[^0-9.-]+/g,"")) || 0,
+        yourGross: parseFloat(document.getElementById('your-gross').innerText.replace(/[^0-9.-]+/g,"")) || 0,
+        yourNet: parseFloat(document.getElementById('your-net').innerText.replace(/[^0-9.-]+/g,"")) || 0
+      };
+
+      savedDeals.unshift(deal);
+      localStorage.setItem('leaseDeals', JSON.stringify(savedDeals));
+      renderSavedDeals();
+      alert(`✅ Deal "${name}" saved!`);
+    }
+
+    function loadDeal(index) {
+      const deal = savedDeals[index];
+      if (!deal) return;
+
+      document.getElementById('sqft').value = deal.sqft || 0;
+      document.getElementById('rent-quoted-as').value = deal.rentQuotedAs || 'sf';
+      document.getElementById('rent-amount').value = deal.rentAmount || 0;
+      document.getElementById('years').value = deal.years || 5;
+      document.getElementById('include-free-rent').checked = deal.includeFreeRent || false;
+      document.getElementById('free-months').value = deal.freeMonths || 2;
+      document.getElementById('extra-months').value = deal.extraMonths || 0;
+      document.getElementById('rent-structure').value = deal.rentStructure || 'annual';
+      document.getElementById('commission-structure').value = deal.commissionType || 'flat';
+      document.getElementById('flat-rate').value = deal.flatRate || 6;
+      document.getElementById('your-side').value = deal.yourSide || 50;
+      document.getElementById('agent-split').value = deal.agentSplit || 50;
+
+      tiers = deal.tiers || [{ from: 1, to: 5, rate: 6 }];
+
+      renderRentStructureInputs();
+      renderCommissionInputs();
+
+      if (deal.totalLease) {
+        document.getElementById('results-panel').classList.remove('hidden');
+        document.getElementById('total-lease-value').innerText = formatCurrency(deal.totalLease);
+        document.getElementById('total-commission').innerText = formatCurrency(deal.totalCommission);
+        document.getElementById('your-gross').innerText = formatCurrency(deal.yourGross);
+        document.getElementById('your-net').innerText = formatCurrency(deal.yourNet);
+      }
+
+      alert(`✅ Loaded: ${deal.name}`);
+    }
+
+    function editDeal(index) {
+      const deal = savedDeals[index];
+      const newName = prompt("Edit deal name:", deal.name);
+      if (!newName) return;
+
+      savedDeals[index].name = newName.trim();
+      localStorage.setItem('leaseDeals', JSON.stringify(savedDeals));
+      renderSavedDeals();
+    }
+
+    function deleteDeal(index) {
+      if (!confirm("Delete this saved deal?")) return;
+      savedDeals.splice(index, 1);
+      localStorage.setItem('leaseDeals', JSON.stringify(savedDeals));
+      renderSavedDeals();
+    }
+
+    // ==================== INIT ====================
+    function init() {
+      renderRentStructureInputs();
+      renderCommissionInputs();
+      loadSavedDeals();
+      console.log('%c[LeaseCalc] Clean working version loaded', 'color:#3b82f6');
+    }
+
+    window.onload = init;
+  </script>
 </body>
 </html>
